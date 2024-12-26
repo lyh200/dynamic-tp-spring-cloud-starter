@@ -29,9 +29,11 @@ import org.dromara.dynamictp.core.notifier.DtpWechatNotifier;
 import org.dromara.dynamictp.common.notifier.DingNotifier;
 import org.dromara.dynamictp.common.notifier.LarkNotifier;
 import org.dromara.dynamictp.common.notifier.WechatNotifier;
+import org.dromara.dynamictp.core.notifier.context.BaseNotifyCtx;
 import org.dromara.dynamictp.core.notifier.context.DtpNotifyCtxHolder;
 import org.dromara.dynamictp.core.notifier.manager.NotifyHelper;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -72,12 +74,22 @@ public final class NotifierHandler {
     }
 
     public void sendAlarm(NotifyItemEnum notifyItemEnum) {
-        NotifyItem notifyItem = DtpNotifyCtxHolder.get().getNotifyItem();
+        BaseNotifyCtx notifyCtx = DtpNotifyCtxHolder.get();
+        if (notifyCtx.isToLog()) {
+            log.warn("DynamicTp alarm, executor [" + notifyCtx.getExecutorWrapper().getThreadPoolName() + "]: \n" + Arrays.toString(notifyCtx.getContent()));
+        }
+        NotifyItem notifyItem = notifyCtx.getNotifyItem();
         for (String platformId : notifyItem.getPlatformIds()) {
             NotifyHelper.getPlatform(platformId).ifPresent(p -> {
                 DtpNotifier notifier = NOTIFIERS.get(p.getPlatform().toLowerCase());
                 if (notifier != null) {
-                    notifier.sendAlarmMsg(p, notifyItemEnum);
+                    if (notifyCtx.isCommonNotify()) {
+                        notifier.sendCommonAlarmMsg(p, notifyItemEnum, notifyCtx.getContent());
+                    } else {
+                        if (!notifyCtx.getExecutorWrapper().isVirtualThreadExecutor()) {
+                            notifier.sendAlarmMsg(p, notifyItemEnum);
+                        }
+                    }
                 }
             });
         }

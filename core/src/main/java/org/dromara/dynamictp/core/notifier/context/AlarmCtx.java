@@ -36,6 +36,13 @@ public class AlarmCtx extends BaseNotifyCtx {
     private AlarmInfo alarmInfo;
 
     public AlarmCtx(ExecutorWrapper wrapper, NotifyItem notifyItem) {
-        super(wrapper, notifyItem);
+        this(wrapper, notifyItem, false, "");
+    }
+
+    public AlarmCtx(ExecutorWrapper wrapper, NotifyItem notifyItem, boolean isCommonNotify, String... content) {
+        this(wrapper, notifyItem, isCommonNotify, false, content);
+    }
+    public AlarmCtx(ExecutorWrapper wrapper, NotifyItem notifyItem, boolean isCommonNotify, boolean isToLog, String... content) {
+        super(wrapper, notifyItem, isCommonNotify, isToLog, content);
     }
 }
